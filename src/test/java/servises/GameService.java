@@ -10,6 +10,7 @@ import models.userDTO.request.SimilarDlcRequest;
 import models.userDTO.response.GameRegisterResponse;
 import models.userDTO.response.GameResponse;
 import org.assertj.core.api.Assertions;
+import utils.FakerProvider;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,8 +23,8 @@ import static assertions.Conditions.hasStatus;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class GameService {
+    private static final ThreadLocal<Faker> faker = ThreadLocal.withInitial(Faker::new);
     private final GameClient gameClient;
-    private final Faker faker = new Faker();
 
     public GameService(String baseUri) {
         this.gameClient = new GameClient(baseUri);
@@ -33,21 +34,22 @@ public class GameService {
         Assertions.assertThat(actual)
                 .as("Проверка DLC: " + expected.getDlcName())
                 .usingRecursiveComparison()
-                .ignoringFields("similarDlc") // игнорируем, если не нужно сравнивать
+                .ignoringFields("similarDlc")
                 .isEqualTo(expected);
     }
 
     public GameRequest generateRandomGame() {
+        Faker f = FakerProvider.getFaker();
         return GameRequest.builder()
-                .company(faker.company().name())
-                .title(faker.book().title())
-                .description(faker.lorem().paragraph())
-                .genre(faker.book().genre())
-                .price(faker.number().randomDouble(2, 10, 100))
+                .company(f.company().name())
+                .title(f.book().title())
+                .description(f.lorem().paragraph())
+                .genre(f.book().genre())
+                .price(f.number().randomDouble(2, 10, 100))
                 .isFree(false)
                 .publishDate(Instant.now().toString())
-                .rating(faker.number().randomDigit())
-                .requiredAge(faker.bool().bool())
+                .rating(f.number().randomDigit())
+                .requiredAge(f.bool().bool())
                 .requirements(generateRandomRequirements())
                 .tags(generateRandomTags())
                 .dlcs(new ArrayList<>()) // без DLC по умолчанию
@@ -55,40 +57,44 @@ public class GameService {
     }
 
     public DlcRequest generateRandomDlc() {
+        Faker f = FakerProvider.getFaker();
         return DlcRequest.builder()
-                .dlcName(faker.commerce().productName())
-                .description(faker.lorem().sentence())
-                .isDlcFree(faker.bool().bool())
-                .price(Math.round(faker.number().randomDouble(2, 10, 100)))
-                .rating(Math.round(faker.number().randomDouble(2, 1, 10)))
+                .dlcName(f.commerce().productName())
+                .description(f.lorem().sentence())
+                .isDlcFree(f.bool().bool())
+                .price(Math.round(f.number().randomDouble(2, 10, 100)))
+                .rating(Math.round(f.number().randomDouble(2, 1, 10)))
                 .similarDlc(generateRandomSimilarDlc())
                 .build();
     }
 
     public SimilarDlcRequest generateRandomSimilarDlc() {
-        if (faker.bool().bool()) {
+        Faker f = FakerProvider.getFaker();
+        if (f.bool().bool()) {
             return SimilarDlcRequest.builder()
-                    .dlcNameFromAnotherGame(faker.commerce().productName())
-                    .isFree(faker.bool().bool())
+                    .dlcNameFromAnotherGame(f.commerce().productName())
+                    .isFree(f.bool().bool())
                     .build();
         }
         return null;
     }
 
     public RequirementsRequest generateRandomRequirements() {
+        Faker f = FakerProvider.getFaker();
         return RequirementsRequest.builder()
-                .osName(faker.options().option("Windows 10", "Windows 11", "macOS", "Linux"))
-                .ramGb(faker.number().numberBetween(4, 32))
-                .hardDrive(faker.number().numberBetween(10, 100))
-                .videoCard(faker.options().option("GTX 1060", "RTX 2060", "Intel UHD", "M1"))
+                .osName(f.options().option("Windows 10", "Windows 11", "macOS", "Linux"))
+                .ramGb(f.number().numberBetween(4, 32))
+                .hardDrive(f.number().numberBetween(10, 100))
+                .videoCard(f.options().option("GTX 1060", "RTX 2060", "Intel UHD", "M1"))
                 .build();
     }
 
     private List<String> generateRandomTags() {
+        Faker f = FakerProvider.getFaker();
         List<String> tags = new ArrayList<>();
-        int tagCount = faker.number().numberBetween(1, 5);
+        int tagCount = f.number().numberBetween(1, 5);
         for (int i = 0; i < tagCount; i++) {
-            tags.add(faker.options().option("RPG", "Action", "Adventure", "Strategy", "Simulation"));
+            tags.add(f.options().option("RPG", "Action", "Adventure", "Strategy", "Simulation"));
         }
         return tags;
     }

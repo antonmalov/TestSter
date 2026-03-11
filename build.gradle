@@ -19,9 +19,14 @@ dependencies {
     testImplementation("io.qameta.allure:allure-rest-assured:2.29.1")
     testImplementation("io.rest-assured:rest-assured:5.5.1")
     testImplementation("com.github.javafaker:javafaker:1.0.2")
-    testImplementation 'org.assertj:assertj-core:3.27.3'
+    testImplementation('org.assertj:assertj-core:3.27.3')
 }
 
 test {
     useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        events "passed", "skipped", "failed"
+        systemProperty "file.encoding", "UTF-8"
+    }
 }
